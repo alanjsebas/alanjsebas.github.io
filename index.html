@@ -441,7 +441,7 @@
         
         <div class="controls">
             <button class="sys-btn" onclick="toggleSystemOverride()">
-                <i class="fas fa-terminal"></i> [DECRYPT_ALL_DATA CARDS]
+                <i class="fas fa-terminal"></i> [DECRYPT_CARDS]
             </button>
         </div>
 
@@ -579,7 +579,7 @@
             if (isSystemOverride) {
                 // EXPAND MODE
                 deck.classList.add('expanded');
-                btn.innerHTML = '<i class="fas fa-lock"></i> [ENCRYPT_ALL_DATA_CARDS]';
+                btn.innerHTML = '<i class="fas fa-lock"></i> [ENCRYPT_CARDS]';
                 
                 Array.from(deck.children).forEach((c, i) => {
                     c.classList.add('flipped');
@@ -606,6 +606,7 @@
     </script>
 </body>
 </html>
+
 
 
 
