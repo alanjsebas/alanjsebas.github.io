@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alan Joseph | Cybersecurity, Threat Intelligence, Scripting & Writing/Editing</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=DM+Sans:opsz,wght@9..40,400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* --- 📠 E-INK VARIABLES --- */
+        :root {
+            --ink: #1a1a1a;       /* Not pure black, softer on eyes like ink */
+            --paper: #f0f0f0;     /* Light grey paper */
+            --paper-white: #ffffff;
+            --border: 2px solid var(--ink);
+            --mono-font: 'Courier Prime', monospace;
+            --sans-font: 'DM Sans', sans-serif;
+            --shadow-lift: 10px 10px 0px rgba(0,0,0,0.15);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--paper);
+            color: var(--ink);
+            font-family: var(--sans-font);
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+        }
+
+        /* --- 📄 SCREEN REFRESH ANIMATION --- */
+        @keyframes eInkFlash {
+            0% { filter: invert(0); }
+            50% { filter: invert(1); }
+            100% { filter: invert(0); }
+        }
+        
+        .refreshing {
+            animation: eInkFlash 0.4s linear;
+        }
+
+        /* --- ⬅️ SIDEBAR (The E-Ink Device) --- */
+        .sidebar {
+            width: 300px;
+            height: 100vh;
+            position: sticky;
+            top: 0;
+            background: var(--paper);
+            border-right: var(--border);
+            padding: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            z-index: 10;
+        }
+
+        .profile-section h1 {
+            font-family: var(--mono-font);
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: -1px;
+        }
+
+        .badge-id {
+            font-family: var(--mono-font);
+            font-size: 0.8rem;
+            border: 1px solid var(--ink);
+            padding: 2px 8px;
+            display: inline-block;
+            margin-bottom: 2rem;
+            background: var(--paper-white);
+        }
+
+        .e-ink-display {
+            background: var(--paper-white);
+            border: var(--border);
+            padding: 1.5rem;
+            font-family: var(--mono-font);
+            font-size: 0.85rem;
+            line-height: 1.5;
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.1);
+        }
+
+        .status-line {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px dashed var(--ink);
+            font-size: 0.7rem;
+        }
+
+        .blink { animation: blinker 1.5s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0; } }
+
+        /* --- ➡️ MAIN CONTENT (The Deck) --- */
+        .main-content {
+            flex: 1;
+            padding: 4rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .controls {
+            width: 100%;
+            max-width: 1000px;
+            margin-bottom: 3rem;
+            display: flex;
+            justify-content: flex-end;
+            border-bottom: 2px solid var(--ink);
+            padding-bottom: 1rem;
+        }
+
+        .sys-btn {
+            background: var(--ink);
+            color: var(--paper-white);
+            border: none;
+            font-family: var(--mono-font);
+            padding: 10px 20px;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-weight: bold;
+            transition: opacity 0.2s;
+        }
+        .sys-btn:hover { opacity: 0.8; }
+
+        /* --- 🎴 THE CARDS --- */
+        .deck-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 2.5rem;
+            width: 100%;
+            max-width: 1000px;
+            perspective: 1000px;
+        }
+
+        /* --- EXPANDED MODE (The Logic) --- */
+        .deck-container.expanded .card-wrapper {
+        /* 1. We must force a fixed height so the scrollbar appears */
+        height: 500px; 
+    
+        /* 2. Disable the hover lift effect in this mode */
+        transform: none; 
+        cursor: default;
+        }
+
+        /* --- THE CARD BACK (The Scroll Area) --- */
+        .back {
+        /* Existing styles... */
+        /* Required 3D positioning */
+         transform: rotateY(180deg);
+        position: absolute;
+        width: 100%;
+        height: 100%;
+         backface-visibility: hidden;
+    
+        /* Aesthetics */
+         background: var(--ink);
+        color: var(--paper-white);
+        padding: 2rem;
+        text-align: left;
+    
+        /* FLEXBOX FIX: This organizes the layout so title stays top, text scrolls */
+        display: flex;
+        flex-direction: column;
+    
+        /* Important: Disable scroll on the container itself */
+        overflow: hidden;
+        }
+
+        .back h3 {
+        border-bottom: 1px solid var(--paper-white);
+        padding-bottom: 10px;
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+    
+        /* Prevent header from shrinking */
+        flex-shrink: 0; 
+        }
+
+            /* 1. SCROLLBAR STYLING */
+        .back-content::-webkit-scrollbar,
+        .pgp-block::-webkit-scrollbar {
+        width: 6px; /* Thinner is cleaner */
+        height: 6px;
+        }
+
+        /* Track matches the background color exactly so it's invisible */
+        .back-content::-webkit-scrollbar-track,
+        .pgp-block::-webkit-scrollbar-track {
+        background: var(--ink); 
+        }
+
+        /* Handle is a dark grey, high contrast but minimal */
+        .back-content::-webkit-scrollbar-thumb,
+        .pgp-block::-webkit-scrollbar-thumb {
+        background: #555; 
+        border-radius: 2px;
+        }
+
+        .back-content::-webkit-scrollbar-thumb:hover,
+        .pgp-block::-webkit-scrollbar-thumb:hover {
+        background: #fff; /* White on hover for interaction feedback */
+        }
+
+        /*  CONTENT CONTAINER */
+        .back-content {
+        flex-grow: 1;
+        overflow-y: auto;   /* Scroll vertical */
+        overflow-x: hidden; /* KILL the horizontal scrollbar */
+    
+        /* Aesthetics */
+        font-size: 0.85rem;
+        line-height: 1.6;
+        opacity: 0.9;
+        padding-right: 10px; /* Room for the scrollbar */
+    
+        /* PREVENT HORIZONTAL SCROLLING ON LONG WORDS */
+        word-wrap: break-word;
+        word-break: break-word; /* Forces "Cybersecurity" to break if too long */
+        hyphens: auto;
+        }
+
+        .card-wrapper {
+            height: 380px;
+            position: relative;
+            cursor: pointer;
+            /* The requested "Pop Up" Effect */
+            transition: transform 0.3s ease, height 0.3s ease; 
+        }
+
+        /* Hover Effect: Lift Up */
+        .card-wrapper:hover {
+            transform: translateY(-15px);
+            z-index: 5;
+        }
+
+        /* Expanded Mode Style */
+        .deck-container.expanded .card-wrapper {
+            height: auto;
+            min-height: 450px;
+            transform: none; /* Disable lift in expanded mode */
+            cursor: default;
+        }
+
+        .card-inner {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+
+        .card-wrapper.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        /* --- SIDES --- */
+        .front, .back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            background: var(--paper-white);
+            border: var(--border);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 5px 5px 0 rgba(0,0,0,0.05); /* Subtle static shadow */
+        }
+
+        /* --- FRONT: The "File" --- */
+        .front {
+            align-items: center;
+            justify-content: center;
+            background-image: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 19px,
+                #e5e5e5 20px
+            ); /* Lined paper effect */
+        }
+
+        .icon-box {
+            width: 80px;
+            height: 80px;
+            background: var(--ink);
+            color: var(--paper-white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .clearance-stamp {
+            border: 2px solid var(--ink);
+            padding: 5px 10px;
+            font-family: var(--mono-font);
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            transform: rotate(-5deg);
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-weight: 700;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+        }
+
+        /* --- BACK: The "Data" --- */
+        .back {
+            transform: rotateY(180deg);
+            background: var(--ink);
+            color: var(--paper-white);
+            padding: 2rem;
+            font-family: var(--mono-font);
+            text-align: left;
+            overflow: hidden;
+        }
+
+        .back h3 {
+            border-bottom: 1px solid var(--paper-white);
+            padding-bottom: 10px;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .back-content {
+            font-size: 0.85rem;
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+
+        /* --- 📁 MODAL (Reader) --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active { opacity: 1; pointer-events: all; }
+
+        .modal-doc {
+            width: 90%; max-width: 600px;
+            background: var(--paper-white);
+            border: var(--border);
+            padding: 3rem;
+            position: relative;
+            box-shadow: 15px 15px 0 rgba(0,0,0,0.1);
+        }
+
+        .close-x {
+            position: absolute; top: 15px; right: 20px;
+            font-size: 1.5rem; cursor: pointer;
+            font-family: var(--mono-font);
+        }
+
+        /* Responsive */
+        @media (max-width: 800px) {
+            body { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; position: relative; border-right: none; border-bottom: var(--border); }
+            .main-content { padding: 2rem 1rem; }
+        }
+
+        a:link {
+            color: rgb(0, 0, 0);
+                }
+        a:visited {
+            color: rgb(0, 0, 0);
+                }
+        a:hover {
+            color: rgb(0, 0, 0);
+                }
+        a:active {
+            color: rgb(0, 0, 0);
+                }
+
+        /* Update this specific class */
+        .pgp-block {
+        width: 100%;             /* Fits the sidebar width */
+        height: 110px;           /* Fixed height: shows ~5 lines like your image */
+        background: var(--paper-white);
+        border: 1px solid var(--ink);
+        font-family: var(--mono-font);
+        font-size: 0.75rem;      /* Small, readable terminal font */
+        padding: 8px;
+        margin-top: 8px;
+        resize: none;            /* Disables the drag handle */
+        overflow-y: auto;        /* Shows scrollbar only for the text content */
+        white-space: pre-wrap;   /* Key change: wraps long lines to fit width */
+        word-break: break-all;   /* Ensures long strings don't break layout */
+        color: var(--ink);
+        display: block;
+        box-shadow: inset 2px 2px 5px rgba(0,0,0,0.05); /* Optional: Inner depth */
+    }
+
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="profile-section">
+            <h1>Person:<br>ALAN JOSEPH</h1>
+            <span class="badge-id"><strong>Interests:</strong> Threat Intelligence, Cybersecurity, Professional Writing/Editing & Scripting/Programming</span>
+            <br><span class="badge-id"><strong>Resume:</strong> <a href="resume_alan.pdf" target="_blank"><i>resume_alan.pdf</i></a></span>
+            <div class="e-ink-display">
+                <p><strong>AVAILABILITY:</strong> Open to Work</p>
+                <p><strong>TLP:CLEAR</p>
+                <p><strong>STATUS:</strong> <span class="blink">●</span> MONITORING</p>
+                
+                <div class="status-line">
+                    LAST REFRESH: <span id="clock">12:00:00</span>
+                </div>
+            </div> <br>
+            <br><span class="badge-id">Email: <br><a href="mailto:alanjsebas@gmail.com">alanjsebas@gmail.com</a> <br>LinkedIn: <a href="https://www.linkedin.com/in/ajph" target='_blank' rel="external">www.linkedin.com/in/ajph</a><br>PGP Key: <a href="Al_0x4D089525_public.asc" target="_blank" style="color:var(--ink)">.asc</a><br>
+            
+            <textarea class="pgp-block" readonly>-----BEGIN PGP PUBLIC KEY BLOCK-----
+
+mDMEaSX9wxYJKwYBBAHaRw8BAQdAS8EGqQuMeqh9hhTrsV8bJcbtNPNv7/CX+uL1
+t4C6dVW0GUFsIDxhbGFuanNlYmFzQGdtYWlsLmNvbT6ImQQTFgoAQRYhBDFCCCe+
+zEE0LFaeJHP7G+NNCJUlBQJpJf3DAhsDBQkFpYylBQsJCAcCAiICBhUKCQgLAgQW
+AgMBAh4HAheAAAoJEHP7G+NNCJUlVQkA/1/3MSytiO4VVxZ8WoiZoHkpvuTdlh+w
+WLlUdKOFIAiRAQCtIab05T9hJdj6ZHVIglETaOA/lrujoJHGehkzcZV4CLg4BGkl
+/cMSCisGAQQBl1UBBQEBB0DoKIYduS6aCWURWYwthJ1PCx/NxpAazA34lgRRO4TX
+AQMBCAeIfgQYFgoAJhYhBDFCCCe+zEE0LFaeJHP7G+NNCJUlBQJpJf3DAhsMBQkF
+pYylAAoJEHP7G+NNCJUlCNIBAOKaAlhjjZNvKjaGBvoCDjJ2MRTEndF2r7EHqJAz
+tn2rAQD8tnkfxfPtC15YHPgbSy49CXGJsUeRvoIkGIRdbLw2Bw==
+=zYxI
+-----END PGP PUBLIC KEY BLOCK-----</textarea>
+</span>
+            
+        </div>
+        
+        
+        <div style="margin-top: 2rem; font-family: var(--mono-font); font-size: 0.7rem; opacity: 0.6;">
+            Site designed by Alan Joseph<br>
+            Inspired by E-ink reader interfaces such as the Kobo
+        </div>
+    </aside>
+
+    <main class="main-content">
+        
+        <div class="controls">
+            <button class="sys-btn" onclick="toggleSystemOverride()">
+                <i class="fas fa-terminal"></i> [DECRYPT_ALL_DATA CARDS]
+            </button>
+        </div>
+
+        <div class="deck-container" id="deck">
+            </div>
+
+    </main>
+
+    <div class="modal-overlay" id="modal" onclick="closeModal(event)">
+        <div class="modal-doc">
+            <span class="close-x" onclick="closeModal(event, true)">[CLOSE]</span>
+            <h2 id="m-title" style="font-family: var(--mono-font); margin-bottom: 1rem; text-transform: uppercase;"></h2>
+            <div id="m-body" style="font-family: var(--mono-font); line-height: 1.6;"></div>
+        </div>
+    </div>
+
+    <script>
+        /* 🔒 CLASSIFIED DATA */
+        const secData = [
+            {
+                title: "IDENTITY",
+                clearance: "About Me",
+                icon: "fa-solid fa-user",
+                summary: "Who Am I?",
+                content: "<strong>FILE: ~identity</strong><br><br>I am a 25 year old with mid-level experience across Threat Intelligence/Cybersecurity firms, I have professional career interests in Threat Intelligence Analysis as well as personal interest in privacy, secure app development and scripting of tasks (Python, BASH & Powershell). "
+            },
+            {
+                title: "PAST",
+                clearance: "Previous Experiences",
+                icon: "fa-sharp-duotone fa-solid fa-hourglass",
+                summary: "Offensive security operations.",
+                content: "<strong>FILE: ~previous_experiences</strong><br><br>I have worked in the following companies:<br>•Cyble (Bangalore Remote) <i>Apr 2024 - Present</i><br>•Saptang Labs (IIT Madras Research Park) <i>Dec 2023 - Mar 2024</i> <br>•ZeroFox (Bangalore) <i>Oct 2022-2023</i></i>"
+            },
+            {
+                title: "CERTIFICATIONS",
+                clearance: "Credentials",
+                icon: "fa-key",
+                summary: "Relevant certs",
+                content: "<strong> FILE: ~certs</strong><br><br>• Python Certification Course <i>by Kaggle</i> (2019) <br>• Linux OS <i>by Illnois Tech </i>  (2023) <br>• Google Professional Cybersecurity Certificate (Pursuing Dec 2025)"
+            },
+            {
+                title: "FUTURE",
+                clearance: "OPEN",
+                icon: "fa-solid fa-arrow-right",
+                summary: "Communicate.",
+                content: "<strong>~FILE: FUTURE_UPLINK</strong><br><br>I'm open to consider work opportunities, let's grow together!<br><br>Email: <a href='mailto:alanjsebas@gmail.com' style='color:CornflowerBlue;'>alanjsebas@gmail.com</a><br>LinkedIn: <a href='https://www.linkedin.com/in/ajph' target='_blank' style='color:CornflowerBlue;'>/in/ajph</a> <br>PGP Key: <a href='Al_0x4D089525_public.asc' target='_blank' style='color:CornflowerBlue;'>.asc</a> "
+            }
+        ];
+
+        const deck = document.getElementById('deck');
+        const modal = document.getElementById('modal');
+        let isSystemOverride = false;
+
+        // 🕰 CLOCK
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('clock').innerText = now.toLocaleTimeString();
+        }, 1000);
+
+        // 1. RENDER CARDS
+        function initSystem() {
+            deck.innerHTML = '';
+            secData.forEach((data, i) => {
+                const card = document.createElement('div');
+                card.className = 'card-wrapper';
+                card.id = `card-${i}`;
+                card.onclick = () => accessFile(i);
+
+                card.innerHTML = `
+                    <div class="card-inner">
+                        <div class="front">
+                            <div class="clearance-stamp">${data.clearance}</div>
+                            <div class="icon-box">
+                                <i class="fas ${data.icon}"></i>
+                            </div>
+                            <div class="card-title">${data.title}</div>
+                        </div>
+                        <div class="back">
+                            <h3>> ${data.title}</h3>
+                            <div class="back-content" id="content-${i}">
+                                <p>${data.summary}</p>
+                                <br>
+                                <p style="border:1px solid white; padding:5px; display:inline-block; font-size:0.7rem;">[ACCESS FILE]</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                deck.appendChild(card);
+            });
+        }
+
+        // 2. CARD INTERACTION
+        function accessFile(i) {
+            if (isSystemOverride) return; // Content is already visible
+
+            const card = document.getElementById(`card-${i}`);
+            card.classList.add('flipped');
+
+            // Delay modal to allow flip animation
+            setTimeout(() => {
+                openModal(i);
+            }, 400);
+        }
+
+        // 3. MODAL LOGIC
+        function openModal(i) {
+            const data = secData[i];
+            document.getElementById('m-title').innerText = data.title;
+            document.getElementById('m-body').innerHTML = data.content;
+            modal.classList.add('active');
+            deck.dataset.active = i;
+        }
+
+        function closeModal(e, force) {
+            if (e.target === e.currentTarget || force) {
+                modal.classList.remove('active');
+                const i = deck.dataset.active;
+                if (i !== undefined) {
+                    setTimeout(() => {
+                        document.getElementById(`card-${i}`).classList.remove('flipped');
+                    }, 200);
+                }
+            }
+        }
+
+        // 4. SYSTEM OVERRIDE (Flip All)
+        function toggleSystemOverride() {
+            isSystemOverride = !isSystemOverride;
+            const btn = document.querySelector('.sys-btn');
+            
+            // E-Ink Flash Animation on Body
+            document.body.classList.add('refreshing');
+            setTimeout(() => document.body.classList.remove('refreshing'), 400);
+
+            if (isSystemOverride) {
+                // EXPAND MODE
+                deck.classList.add('expanded');
+                btn.innerHTML = '<i class="fas fa-lock"></i> [ENCRYPT_ALL_DATA_CARDS]';
+                
+                Array.from(deck.children).forEach((c, i) => {
+                    c.classList.add('flipped');
+                    // Inject full content
+                    document.getElementById(`content-${i}`).innerHTML = secData[i].content;
+                });
+
+            } else {
+                // DEFAULT MODE
+                deck.classList.remove('expanded');
+                btn.innerHTML = '<i class="fas fa-terminal"></i> [DECRYPT_ALL_DATA_CARDS]';
+
+                Array.from(deck.children).forEach((c, i) => {
+                    c.classList.remove('flipped');
+                    // Revert content
+                    setTimeout(() => {
+                        document.getElementById(`content-${i}`).innerHTML = `<p>${secData[i].summary}</p><br><p style="border:1px solid white; padding:5px; display:inline-block; font-size:0.7rem;">[ACCESS FILE]</p>`;
+                    }, 400);
+                });
+            }
+        }
+
+        initSystem();
+    </script>
+</body>
+</html>
